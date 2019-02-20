@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+	<name>E-COM kassa 2.0-2.2</name>
+	<version>0.8</version>
+	<author>Ecomkassa</author>
+	<link>https://www.ecomkassa.ru</link>
+	<code>ecomkassa001</code>
+	<file path="catalog/model/checkout/order.php">
+		<operation>
+			<search><![CDATA[$this->db->query("UPDATE `" . DB_PREFIX . "order` SET order_status_id = '" . (int)$order_status_id . "', date_modified = NOW() WHERE order_id = '" . (int)$order_id . "'");]]></search>
+			<add position="after"><![CDATA[
+			/* ecomkassa changes */
+			/* check order and send fiscal cheque if needed */
+			$file = '/var/www/demo_shop/system/storage/logs/kassa.log';
+			file_put_contents($file, 'catalog/model/checkout/order call'.PHP_EOL, FILE_APPEND );
+			
+			$this->load->model('payment/ecomkassa');
+			$ecom_data['order_info'] = $order_info;
+			$this->model_payment_ecomkassa->checkTransaction($ecom_data);
+			//-------------------
+			]]></add>
+		</operation>
+	</file>
+	<file path="admin/controller/sale/order.php">
+		<operation>
+			<search><![CDATA[$data['accept_language'] = $order_info['accept_language'];]]></search>
+			<add position="after"><![CDATA[
+			
+			/*
+			*	ECOMKASSA
+			*/
+			$this->load->model('module/ecomkassa');
+			$data['sell_receipt_data'] = $this->model_module_ecomkassa->getOrderReceipt($order_info['order_id'],'sell');
+			$data['refund_receipt_data'] = $this->model_module_ecomkassa->getOrderReceipt($order_info['order_id'],'refund');
+			$data['ecomkassa_url_sell'] = $this->url->link('module/ecomkassa/sell', 'token=' . $this->session->data['token'], 'SSL');
+			$data['ecomkassa_url_refund'] = $this->url->link('module/ecomkassa/sellRefund', 'token=' . $this->session->data['token'], 'SSL');
+			$data['ecomkassa_url_correction'] = $this->url->link('module/ecomkassa/sellCorrection', 'token=' . $this->session->data['token'], 'SSL');
+			$data['ecomkassa_total'] = $order_info['total'];
+			/*
+			*	END ECOMKASSA
+			*/
+			
+			]]></add>
+		</operation>
+	</file>
+	
+	<file path="admin/view/template/sale/order_info.tpl">
+		<operation>
+			<search  trim="true" index="4"><![CDATA[<div class="panel panel-default">]]></search>
+			<add position="before"><![CDATA[
+			
+			 
+			<div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-info-circle"></i> Детали чека</h3>
+      </div>
+      <div class="panel-body">
+		 
+			<?php if(empty($sell_receipt_data)){?>
+			<form class="form-horizontal">
+			
+				<div class="col-sm-12">
+					<h4>Отправить данные в ОФД</h4>
+			 
+					<div class="panel-info panel"><div class="panel-body">
+						На данный момент в системе нет данных по этому заказу. В случае если вы переустанавливали плагин, чек может быть в ОФД и не отображаться в данном разделе.
+					</div></div>
+					
+					<div class="form-group">
+					  <label class="col-sm-3 control-label" for="input-override">Продолжить</label>
+					  <div class="col-sm-9">
+						<input type="checkbox" class="chk_disable" id="chk_enable_sell" data-target="btn_send_sell" />
+					  </div>
+					</div>
+					<div class="form-group">
+					  <div class="col-sm-9 col-sm-offset-3">
+						<span class="btn btn-danger" role="button" id="btn_send_sell" disabled="disabled"  data-order="<?php echo $order_id; ?>"  data-url="<?php echo $ecomkassa_url_sell;?>" data-message="sell_result_wrap">Отправить</span>
+						<div id="sell_result_wrap"></div>
+						
+					  </div>
+					</div>
+				</div>
+			</form>	
+			<?php }else{?>
+			<div class="col-sm-12"><h4>Чек на продажу</h4>
+				
+			</div>
+			<div class="col-sm-4">
+				<table class="table table-bordered">
+				<tbody>
+					<tr>
+					<td>Статус</td>
+					<td><?php 
+						if($sell_receipt_data['status']=='wait')
+						{
+							echo 'Ожидание';
+						}
+						if($sell_receipt_data['status']=='error')
+						{
+							echo 'Ошибка ' . $sell_receipt_data['error'];
+						}
+						if($sell_receipt_data['status']=='done')
+						{
+							echo 'Чек отправлен в ОФД';
+						}
+					?></td>
+				  </tr>
+				  <tr>
+					<td>Время</td>
+					<td><?php echo $sell_receipt_data['timestamp'];?></td>
+				  </tr>
+				  
+				  <tr>
+					<td>Уникальный идентификатор</td>
+					<td><?php echo $sell_receipt_data['uuid'];?></td>
+				  </tr>
+				   <tr>
+					<td>Номер ФН</td>
+					<td><?php echo $sell_receipt_data['fn_number'];?></td>
+				  </tr>
+				  <tr>
+					<td>Номер смены</td>
+					<td><?php echo $sell_receipt_data['shift_number'];?></td>
+				  </tr>
+				   
+			 
+				  </tbody>
+			  </table>
+		  
+			</div>
+			<div class="col-sm-4">
+				<table class="table table-bordered">
+				<tbody>
+				 
+				   <tr>
+					<td>Дата и время документа из ФН</td>
+					<td><?php echo $sell_receipt_data['receipt_datetime'];?></td>
+				  </tr>
+				  <tr>
+					<td>Номер чека в смене</td>
+					<td><?php echo $sell_receipt_data['fiscal_receipt_number'];?></td>
+				  </tr>
+				 
+				   <tr>
+					<td>Регистрационный номер ККТ</td>
+					<td><?php echo $sell_receipt_data['ecr_registration_number'];?></td>
+				  </tr>
+				  <tr>
+					<td>Фискальный номер документа</td>
+					<td><?php echo $sell_receipt_data['fiscal_document_number'];?></td>
+				  </tr>
+				   <tr>
+					<td>Фискальный признак документа</td>
+					<td><?php echo $sell_receipt_data['fiscal_document_attribute'];?></td>
+				  </tr>
+				  
+				  
+			 
+			 
+				  </tbody>
+			  </table>
+		  
+			</div>
+			<div class="col-sm-4">
+				<table class="table table-bordered">
+				<tbody>
+			 
+				   <tr>
+					<td>Идентификатор группы ККТ</td>
+					<td><?php echo $sell_receipt_data['group_code'];?></td>
+				  </tr>
+				   <tr>
+					<td>Наименование сервера</td>
+					<td><?php echo $sell_receipt_data['daemon_code'];?></td>
+				  </tr>
+				   <tr>
+					<td>Код ККТ</td>
+					<td><?php echo $sell_receipt_data['device_code'];?></td>
+				  </tr>
+					<tr>
+					<td>Адрес сайта ФНС</td>
+					<td><?php echo $sell_receipt_data['fns_site'];?></td>
+				  </tr>
+				  </tbody>
+			  </table>
+		  
+			</div>
+		
+			
+			<div class="col-sm-12"><h4>Чек на возврат прихода</h4>
+				
+			
+			</div>
+			<?php if(empty($refund_receipt_data)){?>
+			<div class="col-sm-12">
+				<h5>ОСуществить возврат прихода (отмена заказа)</h5>
+				<div class="panel-info panel"><div class="panel-body">
+						После успешной отправки данных на возврат прихода, смените статус заказа и оповестите покупателя.
+					</div></div>
+				<form class="form-horizontal">
+					<div class="form-group">
+					  <label class="col-sm-3 control-label" for="input-override">Продолжить</label>
+					  <div class="col-sm-9">
+						<input type="checkbox" class="chk_disable" data-target="btn_send_sell_refund" />
+					  </div>
+					</div>
+					<div class="form-group">
+					  <div class="col-sm-9 col-sm-offset-3">
+			 
+						<span class="btn btn-danger" role="button"  id="btn_send_sell_refund" data-order="<?php echo $order_id; ?>" 
+						disabled="disabled" data-message="refund_result_wrap" data-url="<?php echo $ecomkassa_url_refund;?>">Отправить Возврат</span>
+						<div id="refund_result_wrap"></div>
+					 </div>
+					</div>
+				</form>	
+			</div>
+				<?php }else{?>
+			 <div class="col-sm-12">
+			<div class="panel-danger panel"><div class="panel-body">
+						<b>Cмените статус заказа и оповестите покупателя.</b>
+				</div></div></div>
+			
+		  <div class="col-sm-4">
+				<table class="table table-bordered">
+				<tbody>
+					<tr>
+					<td>Статус</td>
+					<td><?php 
+						if($refund_receipt_data['status']=='wait')
+						{
+							echo 'Ожидание';
+						}
+						if($refund_receipt_data['status']=='error')
+						{
+							echo 'Ошибка ' . $refund_receipt_data['error'];
+						}
+						if($refund_receipt_data['status']=='done')
+						{
+							echo 'Чек отправлен в ОФД';
+						}
+					?></td>
+				  </tr>
+				  <tr>
+					<td>Время</td>
+					<td><?php echo $refund_receipt_data['timestamp'];?></td>
+				  </tr>
+				  
+				  <tr>
+					<td>Уникальный идентификатор</td>
+					<td><?php echo $refund_receipt_data['uuid'];?></td>
+				  </tr>
+				   <tr>
+					<td>Номер ФН</td>
+					<td><?php echo $refund_receipt_data['fn_number'];?></td>
+				  </tr>
+				  <tr>
+					<td>Номер смены</td>
+					<td><?php echo $refund_receipt_data['shift_number'];?></td>
+				  </tr>
+				   
+			 
+				  </tbody>
+			  </table>
+		  
+			</div>
+			<div class="col-sm-4">
+				<table class="table table-bordered">
+				<tbody>
+				 
+				   <tr>
+					<td>Дата и время документа из ФН</td>
+					<td><?php echo $refund_receipt_data['receipt_datetime'];?></td>
+				  </tr>
+				  <tr>
+					<td>Номер чека в смене</td>
+					<td><?php echo $refund_receipt_data['fiscal_receipt_number'];?></td>
+				  </tr>
+				 
+				   <tr>
+					<td>Регистрационный номер ККТ</td>
+					<td><?php echo $refund_receipt_data['ecr_registration_number'];?></td>
+				  </tr>
+				  <tr>
+					<td>Фискальный номер документа</td>
+					<td><?php echo $refund_receipt_data['fiscal_document_number'];?></td>
+				  </tr>
+				   <tr>
+					<td>Фискальный признак документа</td>
+					<td><?php echo $refund_receipt_data['fiscal_document_attribute'];?></td>
+				  </tr>
+				  
+				  
+			 
+			 
+				  </tbody>
+			  </table>
+		  
+			</div>
+			<div class="col-sm-4">
+				<table class="table table-bordered">
+				<tbody>
+			 
+				   <tr>
+					<td>Идентификатор группы ККТ</td>
+					<td><?php echo $refund_receipt_data['group_code'];?></td>
+				  </tr>
+				   <tr>
+					<td>Наименование сервера</td>
+					<td><?php echo $refund_receipt_data['daemon_code'];?></td>
+				  </tr>
+				   <tr>
+					<td>Код ККТ</td>
+					<td><?php echo $refund_receipt_data['device_code'];?></td>
+				  </tr>
+					<tr>
+					<td>Адрес сайта ФНС</td>
+					<td><?php echo $refund_receipt_data['fns_site'];?></td>
+				  </tr>
+				  </tbody>
+			  </table>
+		  
+			</div>
+			<?php } ?>
+			<?php }?>
+			 
+				
+		</div>
+	</div>
+	<script src="view/javascript/ecomkassa/ecomkassa.js" ></script>
+			 
+			
+			]]></add>
+		</operation>
+	</file>	
+</modification>
