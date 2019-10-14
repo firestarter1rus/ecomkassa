@@ -138,6 +138,7 @@ class ModelPaymentEcomkassa extends Model {
 				$item['price'] = round($order_product['price'],2);
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['sum']= round($order_product['total'],2);
+				$item['payment_method']= 'full_payment';
 				$item['payment_object']= 'commodity';
 				$item['tax'] = $this->config->get('ecomkassa_vat');      
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('ecomkassa_vat') );      
@@ -152,6 +153,7 @@ class ModelPaymentEcomkassa extends Model {
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
+					$item['payment_method']= 'full_payment';
 					if( $order_total['code'] == 'shipping'){
 						$item['payment_object']= 'service';
 					}else{
