@@ -136,19 +136,25 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
 		 
 			$request['external_id'] = $order_info['order_id'];
-		
+			 
 			
 			if(empty($order_info['email'])){
 				$order_info['email'] = $this->config->get('config_email');
 			}
 			
-			$request['receipt']['attributes']['email'] =$order_info['email']; 
+			$request['receipt']['client']['email'] =$order_info['email']; 
 			$phone =  str_replace(' ', '', $order_info['telephone']);
+			$phone =  str_replace('+', '', $phone);
+			$phone =  str_replace('(', '', $phone);
+			$phone =  str_replace(')', '', $phone);
 			
-			$request['receipt']['attributes']['phone'] = $phone ; 
-			$request['receipt']['attributes']['sno'] = $this->config->get('module_ecomkassa_sno');      
-			 
-			 
+			$request['receipt']['client']['phone'] = $phone ;
+			
+			$request['receipt']['company']['sno'] = $this->config->get('module_ecomkassa_sno');      
+			$request['receipt']['company']['email'] = $this->config->get('config_email');      
+			$request['receipt']['company']['inn'] = $this->config->get('module_ecomkassa_inn');      
+			$request['receipt']['company']['payment_address'] = $order_info['store_url'];      
+			$request['receipt']['vat']['type'] = $this->config->get('module_ecomkassa_vat') ;      
 			 
 			foreach($order_products as $order_product){
  
@@ -157,7 +163,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['payment_object']= 'commodity';
 				$item['sum']= round($order_product['total'],2);
-				$item['payment_method']= 'full_payment';
+				$item['payment_method']= 'full_prepayment';
 				$item['tax'] = $this->config->get('module_ecomkassa_vat');      
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('module_ecomkassa_vat') );      
 				if($tax){
@@ -171,7 +177,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
-					$item['payment_method']= 'full_payment';
+					$item['payment_method']= 'full_prepayment';
 					if( $order_total['code'] == 'shipping'){
 						$item['payment_object']= 'service';
 					}else{
@@ -188,6 +194,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					if($tax){
 						$item['tax_sum'] = $tax;
 					}
+					
 					$request['receipt']['items'][] = $item;
 
 				}

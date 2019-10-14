@@ -124,13 +124,19 @@ class ModelPaymentEcomkassa extends Model {
 				$order_info['email'] = $this->config->get('config_email');
 			}
 			
-			$request['receipt']['attributes']['email'] =$order_info['email']; 
+			$request['receipt']['client']['email'] =$order_info['email']; 
 			$phone =  str_replace(' ', '', $order_info['telephone']);
+			$phone =  str_replace('+', '', $phone);
+			$phone =  str_replace('(', '', $phone);
+			$phone =  str_replace(')', '', $phone);
 			
-			$request['receipt']['attributes']['phone'] = $phone ; 
-			$request['receipt']['attributes']['sno'] = $this->config->get('ecomkassa_sno');      
-			 
-			 
+			$request['receipt']['client']['phone'] = $phone ; 
+			
+			$request['receipt']['company']['sno'] = $this->config->get('ecomkassa_sno');      
+			$request['receipt']['company']['email'] = $this->config->get('config_email');      
+			$request['receipt']['company']['inn'] = $this->config->get('ecomkassa_inn');      
+			$request['receipt']['company']['payment_address'] = $order_info['store_url'];      
+			$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ;   
 			 
 			foreach($order_products as $order_product){
  
@@ -138,7 +144,7 @@ class ModelPaymentEcomkassa extends Model {
 				$item['price'] = round($order_product['price'],2);
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['sum']= round($order_product['total'],2);
-				$item['payment_method']= 'full_payment';
+				$item['payment_method']= 'full_prepayment';
 				$item['payment_object']= 'commodity';
 				$item['tax'] = $this->config->get('ecomkassa_vat');      
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('ecomkassa_vat') );      
@@ -153,7 +159,7 @@ class ModelPaymentEcomkassa extends Model {
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
-					$item['payment_method']= 'full_payment';
+					$item['payment_method']= 'full_prepayment';
 					if( $order_total['code'] == 'shipping'){
 						$item['payment_object']= 'service';
 					}else{
