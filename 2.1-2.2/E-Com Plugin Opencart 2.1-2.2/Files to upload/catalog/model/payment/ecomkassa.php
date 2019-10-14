@@ -116,7 +116,7 @@ class ModelPaymentEcomkassa extends Model {
 		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?tokenid='.$authToken;  
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
-		 
+			
 			$request['external_id'] = $order_info['order_id'];
 		
 			
@@ -130,13 +130,13 @@ class ModelPaymentEcomkassa extends Model {
 			$phone =  str_replace('(', '', $phone);
 			$phone =  str_replace(')', '', $phone);
 			
-			$request['receipt']['client']['phone'] = $phone ; 
-			
+			$request['receipt']['client']['phone'] = $phone ;     
+			 
 			$request['receipt']['company']['sno'] = $this->config->get('ecomkassa_sno');      
 			$request['receipt']['company']['email'] = $this->config->get('config_email');      
 			$request['receipt']['company']['inn'] = $this->config->get('ecomkassa_inn');      
 			$request['receipt']['company']['payment_address'] = $order_info['store_url'];      
-			$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ;   
+			$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ; 
 			 
 			foreach($order_products as $order_product){
  

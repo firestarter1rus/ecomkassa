@@ -121,6 +121,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?tokenid='.$authToken;  
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
+			
 			$request['external_id'] = $order_info['order_id'];
 		
 			
@@ -128,13 +129,19 @@ class ModelExtensionModuleEcomkassa extends Model {
 				$order_info['email'] = $this->config->get('config_email');
 			}
 			
-			$request['receipt']['attributes']['email'] =$order_info['email']; 
+			$request['receipt']['client']['email'] =$order_info['email']; 
 			$phone =  str_replace(' ', '', $order_info['telephone']);
+			$phone =  str_replace('+', '', $phone);
+			$phone =  str_replace('(', '', $phone);
+			$phone =  str_replace(')', '', $phone);
 			
-			$request['receipt']['attributes']['phone'] = $phone ; 
-			$request['receipt']['attributes']['sno'] = $this->config->get('ecomkassa_sno');      
+			$request['receipt']['client']['phone'] = $phone ;     
 			 
-			 
+			$request['receipt']['company']['sno'] = $this->config->get('ecomkassa_sno');      
+			$request['receipt']['company']['email'] = $this->config->get('config_email');      
+			$request['receipt']['company']['inn'] = $this->config->get('ecomkassa_inn');      
+			$request['receipt']['company']['payment_address'] = $order_info['store_url'];      
+			$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ; 
 			 
 			foreach($order_products as $order_product){
  
@@ -142,7 +149,9 @@ class ModelExtensionModuleEcomkassa extends Model {
 				$item['price'] = round($order_product['price'],2);
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['sum']= round($order_product['total'],2);
+				$item['payment_object']= 'commodity';
 				$item['tax'] = $this->config->get('ecomkassa_vat');      
+				$item['payment_method']= 'full_prepayment';
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('ecomkassa_vat') );      
 				if($tax){
 					$item['tax_sum'] = $tax;
@@ -150,11 +159,17 @@ class ModelExtensionModuleEcomkassa extends Model {
 				$request['receipt']['items'][] = $item;
 			}
 			foreach($order_totals as $order_total){
-				if( $order_total['code'] == 'shipping' ||  $order_total['code'] == 'coupon' ||  $order_total['code'] == 'voucher'){
+				if( $order_total['code'] == 'shipping' || $order_total['code'] == 'coupon'  ||  $order_total['code'] == 'voucher'){
 					$item['name'] = $order_total['title'];
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
+					$item['payment_method']= 'full_prepayment';
+					if( $order_total['code'] == 'shipping'){
+						$item['payment_object']= 'service';
+					}else{
+						$item['payment_object']= 'payment';
+					} 
 					if($order_total['code'] == 'coupon' ||  $order_total['code'] == 'voucher'){
 						$vat = 'none';
 					}else{
@@ -167,20 +182,20 @@ class ModelExtensionModuleEcomkassa extends Model {
 						$item['tax_sum'] = $tax;
 					}
 	 
-	 
 					$request['receipt']['items'][] = $item;
 
 				}
 			}
 
-			$payment['sum']  =  round($order_info['total']);
+			$payment['sum']  =  round($order_info['total'],2);
 			$payment['type'] = 1;
 			$request['receipt']['payments'][] = $payment;   
+ 
+			
 			$request['receipt']['total']  =   round($order_info['total'],2);  
 			
-			$callback_url = new Url(HTTP_CATALOG, $this->config->get('config_secure') ? HTTP_CATALOG : HTTPS_CATALOG);
-			
-			$callback_url =  $callback_url->link('extension/module/ecomkassa/callback' ); //2.3
+			$callback_url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
+			$callback_url =  $callback_url->link('extension/module/ecomkassa/callback' );
 			$request['service']['callback_url'] = $callback_url;
 			$request['service']['inn'] =$this->config->get('ecomkassa_inn');   
 			$request['service']['payment_address'] = $order_info['store_url'];
