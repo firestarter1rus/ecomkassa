@@ -155,6 +155,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				$item['name'] = $order_product['name'];
 				$item['price'] = round($order_product['price'],2);
 				$item['quantity'] =(float) $order_product['quantity'];
+				$item['payment_object']= 'commodity';
 				$item['sum']= round($order_product['total'],2);
 				$item['tax'] = $this->config->get('module_ecomkassa_vat');      
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('module_ecomkassa_vat') );      
@@ -169,7 +170,11 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
-					 
+					if( $order_total['code'] == 'shipping'){
+						$item['payment_object']= 'service';
+					}else{
+						$item['payment_object']= 'payment';
+					} 
 					if($order_total['code'] == 'coupon' ||  $order_total['code'] == 'voucher'){
 						$vat = 'none';
 					}else{
