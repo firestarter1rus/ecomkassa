@@ -143,7 +143,28 @@ class ModelExtensionModuleEcomkassa extends Model {
 			$request['receipt']['company']['payment_address'] = $order_info['store_url'];      
 			$request['receipt']['vat']['type'] = $this->config->get('module_ecomkassa_vat') ;     
 			 
-			 
+			$coupons = 0;
+			 $discount = 0;
+			 $spare = 0;
+			
+			foreach($order_totals as $order_total){
+				if(  $order_total['code'] == 'coupon'  ){
+					$coupons +=  abs(round($order_total['value'],2));
+				}
+			}
+			if($coupons > 0){
+				$discount = $coupons /  count($order_products);
+				$discount =  round($discount,2) ;
+				$spare = $coupons  - ($discount *  count($order_products));
+				$spare = round($spare,2) ;
+				foreach($order_products as $order_product){
+					if($order_product['total'] < $discount ){
+						$spare += $discount  - $order_product['total'] + 0.01 ;
+					}
+				}
+			}		
+
+			
 			foreach($order_products as $order_product){
  
 				$item['name'] = $order_product['name'];
@@ -151,12 +172,25 @@ class ModelExtensionModuleEcomkassa extends Model {
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['payment_object']= 'commodity';
 				$item['sum']= round($order_product['total'],2);
+				
+				$item['sum'] = $item['sum'] - $discount;
+				if($order_product['total'] < $discount ){
+					$item['sum'] = 0.01;
+				}
+				
 				$item['payment_method']= 'full_prepayment';
 				$item['tax'] = $this->config->get('module_ecomkassa_vat');      
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('module_ecomkassa_vat') );      
 				if($tax){
 					$item['tax_sum'] = $tax;
 				}
+				
+				if($item['sum']  > $spare + 0.01  && $spare  != 0){
+					$item['sum'] = $item['sum']  - $spare ;
+					$spare = 0;
+				}
+				
+				
 				$request['receipt']['items'][] = $item;
 			}
 			foreach($order_totals as $order_total){
