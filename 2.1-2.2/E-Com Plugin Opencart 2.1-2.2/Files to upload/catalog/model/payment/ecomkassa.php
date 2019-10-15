@@ -59,9 +59,12 @@ class ModelPaymentEcomkassa extends Model {
 		 
 			return;
 		}
+		//{"uuid":"","timestamp":"15.10.2019 11:47:58","status":"fail","permalink":"","error":{"code":8,"text":"IncomingValidationException. The sum of items is not equals to payments sum.","type":"system"}}
+		if(empty($json->status )){
+			return;
+		}
 		
-		
-		if($json->error == null){
+		if($json->status == 'done' || $json->status == 'fail'){
 			$receipt['error'] = $json->error;
 			$receipt['status'] = $json->status;
 			$receipt['fn_number'] = $json->payload->fn_number;

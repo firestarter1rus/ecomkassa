@@ -28,7 +28,11 @@ class ControllerModuleEcomkassa extends Controller {
 			return;
 		}
  
-		if($json->error == null){
+		if(empty($json->status )){
+			return;
+		}
+		
+		if($json->status == 'done' || $json->status == 'fail'){
 		
 			$uuid =  $json->uuid;
 			$receipt =  $this->model_payment_ecomkassa->loadReceipt($uuid );

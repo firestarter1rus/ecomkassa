@@ -73,7 +73,11 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		}
 		
 		
-		if($json->error == null){
+		if(empty($json->status )){
+			return;
+		}
+		
+		if($json->status == 'done' || $json->status == 'fail'){
 			$receipt['error'] = $json->error;
 			$receipt['status'] = $json->status;
 			$receipt['fn_number'] = $json->payload->fn_number;
