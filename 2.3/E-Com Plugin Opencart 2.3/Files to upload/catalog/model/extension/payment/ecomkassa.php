@@ -258,7 +258,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			$request['service']['payment_address'] = $order_info['store_url'];
 			$request['timestamp'] = date("d.m.Y H:i:s");  
 			file_put_contents(DIR_LOGS.'ecomkassa.log', 'request'.PHP_EOL. print_r($request, true).PHP_EOL.PHP_EOL, FILE_APPEND);
-			$response = $this->curlFunction( $url,  $request, true);
+			$response = $this->curlFunction( $url,  $request, true, $authToken);
 			file_put_contents(DIR_LOGS.'ecomkassa.log', 'response'.PHP_EOL. $response.PHP_EOL.PHP_EOL, FILE_APPEND);
 			$json = json_decode($response);
 			

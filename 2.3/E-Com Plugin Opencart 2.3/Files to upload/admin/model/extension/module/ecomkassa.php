@@ -236,7 +236,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 			$request['service']['payment_address'] = $order_info['store_url'];
 			$request['timestamp'] = date("d.m.Y H:i:s");  
  
-			$response = $this->curlFunction( $url,  $request, true);
+			$response = $this->curlFunction( $url,  $request, true, $authToken);
 			
 			$debug = true;
 			if($debug){
