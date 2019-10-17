@@ -216,7 +216,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				$request['receipt']['items'][] = $item;
 			}
 			foreach($order_totals as $order_total){
-				if( $order_total['code'] == 'shipping' || $order_total['code'] == 'coupon'  ||  $order_total['code'] == 'voucher'){
+				if( $order_total['code'] == 'shipping'   ||  $order_total['code'] == 'voucher'){
 					$item['name'] = $order_total['title'];
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
