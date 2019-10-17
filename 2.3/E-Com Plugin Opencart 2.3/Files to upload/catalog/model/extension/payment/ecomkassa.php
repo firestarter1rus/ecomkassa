@@ -390,9 +390,12 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		
-			if($authToken){
+		
+		
+		}
+		if($authToken){
 				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-				'Authorization: '.$authToken,
+				'Token: '.$authToken,
 				'Content-Type: application/json'
 				));
 			}else{
@@ -401,9 +404,6 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				));
 			}
 			
-		
-		}
-
 		$content = curl_exec( $ch );
 		curl_close( $ch );
 		

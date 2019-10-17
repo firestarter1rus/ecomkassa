@@ -436,7 +436,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 		if($authToken){
 			curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-			'Authorization: '.$authToken,
+			'Token: '.$authToken,
 			'Content-Type: application/json'
 			));
 		}else{
