@@ -50,7 +50,7 @@ class ModelPaymentEcomkassa extends Model {
 		$shopid = $this->config->get('ecomkassa_shopid');
 		$password = $this->config->get('ecomkassa_password');
 		$login = $this->config->get('ecomkassa_login');
-		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shopid. '/report/'.$receipt['uuid'].'?tokenid='.$this->token;  
+		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shopid. '/report/'.$receipt['uuid'].'?token='.$this->token;  
  
 		$response = $this->curlFunction( $url,  array(), false);
 		
@@ -116,7 +116,7 @@ class ModelPaymentEcomkassa extends Model {
 	public function sell($order_info, $authToken){
 		$shop_id = $this->config->get('ecomkassa_shopid');
 		 
-		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?tokenid='.$authToken;  
+		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?token='.$authToken;  
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
 			
@@ -234,7 +234,7 @@ class ModelPaymentEcomkassa extends Model {
 			$request['service']['payment_address'] = $order_info['store_url'];
 			$request['timestamp'] = date("d.m.Y H:i:s");  
 
-			$response = $this->curlFunction( $url,  $request, true);
+			$response = $this->curlFunction( $url,  $request, true,$authToken );
 			$json = json_decode($response);
 			$this->addOrderReceipt($order_info,$request,$json ,'sell' );
 	}
@@ -353,6 +353,10 @@ class ModelPaymentEcomkassa extends Model {
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 		
+			
+		
+		}
+
 			if($authToken){
 				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
 				'Authorization: '.$authToken,
@@ -363,10 +367,6 @@ class ModelPaymentEcomkassa extends Model {
 				'Content-Type: application/json'
 				));
 			}
-			
-		
-		}
-
 		$content = curl_exec( $ch );
 		curl_close( $ch );
 		

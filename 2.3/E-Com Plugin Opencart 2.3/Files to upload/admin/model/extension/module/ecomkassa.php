@@ -118,7 +118,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 	public function sell($order_info, $authToken){
 		$shop_id = $this->config->get('ecomkassa_shopid');
 		 
-		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?tokenid='.$authToken;  
+		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?token='.$authToken;  
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
 			
@@ -284,12 +284,12 @@ class ModelExtensionModuleEcomkassa extends Model {
 	public function refund($order_info,$receipt, $authToken){
 		$shop_id = $this->config->get('ecomkassa_shopid');
 		 
-		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell_refund?tokenid='.$authToken;  
+		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell_refund?token='.$authToken;  
  
 		$request =  unserialize($receipt['request']);
 		
 			 
-		$response = $this->curlFunction( $url,  $request, true);
+		$response = $this->curlFunction( $url,  $request, true, $authToken);
 	 
 		 
 		$json = json_decode($response);
@@ -303,7 +303,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 	public function correction($order_info,$receipt, $authToken){
 		$shop_id = $this->config->get('ecomkassa_shopid');
 		 
-		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell_correction?tokenid='.$authToken;  
+		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell_correction?token='.$authToken;  
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		 
 			$request['external_id'] = $order_info['order_id'];
@@ -423,11 +423,11 @@ class ModelExtensionModuleEcomkassa extends Model {
 		if($authToken){
 			curl_setopt($ch, CURLOPT_HTTPHEADER , array(
 			'Authorization: '.$authToken,
-			'Content-Type: application/json'
+			'Content-Type: application/json; charset=utf-8'
 			));
 		}else{
 			curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-			'Content-Type: application/json'
+			'Content-Type: application/json; charset=utf-8'
 			));
 		}
 		
