@@ -164,7 +164,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			$request['receipt']['company']['email'] = $this->config->get('config_email');      
 			$request['receipt']['company']['inn'] = $this->config->get('ecomkassa_inn');      
 			$request['receipt']['company']['payment_address'] = $order_info['store_url'];      
-			$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ;    
+			//$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ;    
 			 
 			 $coupons = 0;
 			 $discount = 0;
@@ -232,8 +232,8 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					}else{
 						$vat = $this->config->get('ecomkassa_vat');  
 					}
-					
-					$item['tax'] = $vat ;  
+				 
+					$item['vat']['type'] = 'none' ;  
 					$tax = $this->get_vat(round($order_total['value'],2),$vat );      
 					if($tax){
 						$item['tax_sum'] = $tax;
@@ -393,17 +393,18 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		
 		
 		}
-		if($authToken){
+			if($authToken){
 				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
 				'Token: '.$authToken,
-				'Content-Type: application/json; charset=utf-8'
+				'Content-Type: application/json; charset=utf-8',
+				'Accept: application/json'
 				));
 			}else{
 				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-				'Content-Type: application/json; charset=utf-8'
+				'Content-Type: application/json; charset=utf-8',
+				'Accept: application/json'
 				));
 			}
-			
 		$content = curl_exec( $ch );
 		curl_close( $ch );
 		

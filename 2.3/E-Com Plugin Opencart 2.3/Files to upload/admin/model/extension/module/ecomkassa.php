@@ -211,7 +211,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 						$vat = $this->config->get('ecomkassa_vat');  
 					}
 					
-					$item['tax'] = $vat ;  
+					$item['vat']['type'] = 'none' ; 
 					$tax = $this->get_vat(round($order_total['value'],2),$vat );      
 					if($tax){
 						$item['tax_sum'] = $tax;
@@ -431,11 +431,13 @@ class ModelExtensionModuleEcomkassa extends Model {
 		if($authToken){
 				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
 				'Token: '.$authToken,
-				'Content-Type: application/json; charset=utf-8'
+				'Content-Type: application/json; charset=utf-8',
+				'Accept: application/json'
 				));
 			}else{
 				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-				'Content-Type: application/json; charset=utf-8'
+				'Content-Type: application/json; charset=utf-8',
+				'Accept: application/json'
 				));
 			}
 
