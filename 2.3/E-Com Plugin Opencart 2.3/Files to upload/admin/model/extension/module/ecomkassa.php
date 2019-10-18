@@ -179,6 +179,9 @@ class ModelExtensionModuleEcomkassa extends Model {
 				
 				$item['payment_object']= 'commodity';
 				$item['tax'] = $this->config->get('ecomkassa_vat');      
+				
+				$vat = $this->config->get('ecomkassa_vat');  
+				$item['vat']['type'] = $vat ;  		
 				$item['payment_method']= 'full_prepayment';
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('ecomkassa_vat') );      
 				if($tax){

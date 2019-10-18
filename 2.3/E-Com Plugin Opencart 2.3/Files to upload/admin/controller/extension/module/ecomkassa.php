@@ -261,14 +261,14 @@ class ControllerExtensionModuleEcomkassa extends Controller {
 					);
 				}
 			}
-		}
+		}ModelLocalisationOrderStatus
 		*/
 		
-			
+		 
 		$this->load->model('localisation/order_status');
 
 		$data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses(); 
-		
+		 
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
