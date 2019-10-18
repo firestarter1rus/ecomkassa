@@ -211,7 +211,9 @@ class ModelExtensionModuleEcomkassa extends Model {
 						$vat = $this->config->get('ecomkassa_vat');  
 					}
 					
-					$item['vat']['type'] = 'none' ; 
+				//	$item['vat']['type'] = 'none' ; 
+					
+					$item['vat']['type'] = $vat ;  
 					$tax = $this->get_vat(round($order_total['value'],2),$vat );      
 					if($tax){
 						$item['tax_sum'] = $tax;
