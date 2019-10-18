@@ -420,21 +420,24 @@ class ModelExtensionModuleEcomkassa extends Model {
 		curl_setopt($ch, CURLOPT_MAXREDIRS, 10);		// останавливаться после 10-ого редиректа
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-		if($authToken){
-			curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-			'Authorization: '.$authToken,
-			'Content-Type: application/json; charset=utf-8'
-			));
-		}else{
-			curl_setopt($ch, CURLOPT_HTTPHEADER , array(
-			'Content-Type: application/json; charset=utf-8'
-			));
-		}
 		
 		if($post){
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		
+		
+		
 		}
+		if($authToken){
+				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
+				'Token: '.$authToken,
+				'Content-Type: application/json; charset=utf-8'
+				));
+			}else{
+				curl_setopt($ch, CURLOPT_HTTPHEADER , array(
+				'Content-Type: application/json; charset=utf-8'
+				));
+			}
 
 		$content = curl_exec( $ch );
 		curl_close( $ch );
