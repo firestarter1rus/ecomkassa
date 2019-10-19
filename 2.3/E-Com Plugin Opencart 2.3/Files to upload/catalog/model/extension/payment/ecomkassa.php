@@ -198,7 +198,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				if($order_product['total'] < $discount ){
 					$item['sum'] = 0.01;
 				}
-				
+				$item['sum'] =(float) $item['sum'];
 				$item['payment_object']= 'commodity';
 				$item['tax'] = $this->config->get('ecomkassa_vat');   
 				
@@ -212,6 +212,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				
 				if($item['sum']  > $spare + 0.01  && $spare  != 0){
 					$item['sum'] = $item['sum']  - $spare ;
+					$item['sum'] =(float) $item['sum'];
 					$spare = 0;
 				}
 				
@@ -224,6 +225,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
+					$item['sum'] =(float) $item['sum'];
 					$item['payment_method']= 'full_prepayment';
 					if( $order_total['code'] == 'shipping'){
 						$item['payment_object']= 'service';
@@ -248,18 +250,21 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			}
 
 			$payment['sum']  =  round($order_info['total'],2);
+			$payment['sum'] =(float) $payment['sum'];
 			$payment['type'] = 1;
 			$request['receipt']['payments'][] = $payment;   
  
 			
 			$request['receipt']['total']  =   round($order_info['total'],2);  
-			
+			$request['receipt']['total']  =(float)$request['receipt']['total'] ;
 			$callback_url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
 			$callback_url =  $callback_url->link('extension/module/ecomkassa/callback' );
 			$request['service']['callback_url'] = $callback_url;
 			$request['service']['inn'] =$this->config->get('ecomkassa_inn');   
 			$request['service']['payment_address'] = $order_info['store_url'];
 			$request['timestamp'] = date("d.m.Y H:i:s");  
+			
+			
 			file_put_contents(DIR_LOGS.'ecomkassa.log', 'request'.PHP_EOL. print_r($request, true).PHP_EOL.PHP_EOL, FILE_APPEND);
 			$response = $this->curlFunction( $url,  $request, true, $authToken);
 			file_put_contents(DIR_LOGS.'ecomkassa.log', 'response'.PHP_EOL. $response.PHP_EOL.PHP_EOL, FILE_APPEND);

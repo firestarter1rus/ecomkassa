@@ -170,7 +170,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 				$item['price'] = round($order_product['price'],2);
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['sum']= round($order_product['total'],2);
-				
+				$item['sum'] =(float) $item['sum'];
 				$item['sum'] = $item['sum'] - $discount;
 				if($order_product['total'] < $discount ){
 					$item['sum'] = 0.01;
@@ -190,6 +190,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 				
 				if($item['sum']  > $spare + 0.01  && $spare  != 0){
 					$item['sum'] = $item['sum']  - $spare ;
+					$item['sum'] =(float) $item['sum'];
 					$spare = 0;
 				}
 				
@@ -202,6 +203,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
+					$item['sum'] =(float) $item['sum'];
 					$item['payment_method']= 'full_prepayment';
 					if( $order_total['code'] == 'shipping'){
 						$item['payment_object']= 'service';
@@ -228,12 +230,13 @@ class ModelExtensionModuleEcomkassa extends Model {
 			}
 
 			$payment['sum']  =  round($order_info['total'],2);
+			$payment['sum'] =(float) $payment['sum'];
 			$payment['type'] = 1;
 			$request['receipt']['payments'][] = $payment;   
- 
+			
 			
 			$request['receipt']['total']  =   round($order_info['total'],2);  
-			
+			$request['receipt']['total']  =(float)$request['receipt']['total'] ;
 			$callback_url = new Url(HTTP_SERVER, $this->config->get('config_secure') ? HTTP_SERVER : HTTPS_SERVER);
 			$callback_url =  $callback_url->link('extension/module/ecomkassa/callback' );
 			$request['service']['callback_url'] = $callback_url;
