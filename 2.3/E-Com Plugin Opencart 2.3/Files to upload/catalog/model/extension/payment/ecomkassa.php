@@ -140,13 +140,13 @@ class ModelExtensionPaymentEcomkassa extends Model {
 	
 	public function sell($order_info, $authToken){
 		$shop_id = $this->config->get('ecomkassa_shopid');
-		 
+		file_put_contents(DIR_LOGS.'ecomkassa.log', 'line '.__LINE__ . ' sell '   .PHP_EOL.PHP_EOL, FILE_APPEND);
 		$url =trim(  $this->config->get('ecomkassa_url'), '/').'/'.$shop_id. '/sell?token='.$authToken;  
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
 		 
 			$request['external_id'] = $order_info['order_id'];
-		
+			
 			
 			if(empty($order_info['email'])){
 				$order_info['email'] = $this->config->get('config_email');
@@ -167,25 +167,28 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			//$request['receipt']['vat']['type'] = $this->config->get('ecomkassa_vat') ;    
 			 
 			 $coupons = 0;
-			 $discount = 0;
-			 $spare = 0;
+			 $sum = 0;
+			 $shipping = 0;
+			// $discount = 0;
+			// $spare = 0;
 			
+			$total = round($order_info['total'],2);
+			file_put_contents(DIR_LOGS.'ecomkassa.log', 'line '.__LINE__ . ' total ' . $total   .PHP_EOL.PHP_EOL, FILE_APPEND);
+			foreach($order_products as $order_product){
+			 
+				$sum +=  abs(round($order_product['total'],2));
+				 
+			}
 			foreach($order_totals as $order_total){
-				if(  $order_total['code'] == 'coupon'  ){
-					$coupons +=  abs(round($order_total['value'],2));
+				if( $order_total['code'] == 'shipping'    ){
+						$shipping +=  abs(round($order_total['value'],2));
 				}
 			}
-			if($coupons > 0){
-				$discount = $coupons /  count($order_products);
-				$discount =  round($discount,2) ;
-				$spare = $coupons  - ($discount *  count($order_products));
-				$spare = round($spare,2) ;
-				foreach($order_products as $order_product){
-					if($order_product['total'] < $discount ){
-						$spare += $discount  - $order_product['total'] + 0.01 ;
-					}
-				}
-			}			
+			$coupons =  abs($total - $shipping - $sum) ;
+			$coupons = round($coupons,2);
+			file_put_contents(DIR_LOGS.'ecomkassa.log', 'line '.__LINE__ . ' sum products ' . $sum   .PHP_EOL.PHP_EOL, FILE_APPEND); 	
+			file_put_contents(DIR_LOGS.'ecomkassa.log', 'line '.__LINE__ . ' sum shipping ' . $shipping   .PHP_EOL.PHP_EOL, FILE_APPEND); 	
+			file_put_contents(DIR_LOGS.'ecomkassa.log', 'line '.__LINE__ . ' coupons ' . $coupons   .PHP_EOL.PHP_EOL, FILE_APPEND); 	
 			 
 			foreach($order_products as $order_product){
  
@@ -194,11 +197,11 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				$item['quantity'] =(float) $order_product['quantity'];
 				$item['sum']= round($order_product['total'],2);
 				
-				$item['sum'] = $item['sum'] - $discount;
-				if($order_product['total'] < $discount ){
-					$item['sum'] = 0.01;
-				}
-				$item['sum'] =(float) $item['sum'];
+				//$item['sum'] = $item['sum'] - $discount;
+				//if($order_product['total'] < $discount ){
+				//	$item['sum'] = 0.01;
+				//}
+				//$item['sum'] =(float) $item['sum'];
 				$item['payment_object']= 'commodity';
 				$item['tax'] = $this->config->get('ecomkassa_vat');   
 				
@@ -210,17 +213,19 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					$item['tax_sum'] = $tax;
 				}
 				
-				if($item['sum']  > $spare + 0.01  && $spare  != 0){
-					$item['sum'] = $item['sum']  - $spare ;
-					$item['sum'] =(float) $item['sum'];
-					$spare = 0;
-				}
+				
 				
 				
 				$request['receipt']['items'][] = $item;
 			} 
+			file_put_contents(DIR_LOGS.'ecomkassa.log', 'line '.__LINE__ . ' coupons is ' . $coupons  .PHP_EOL.PHP_EOL, FILE_APPEND);
+			if( $coupons  > 0 ){
+				$request['receipt']['items'] = $this->calculate_discount($request['receipt']['items'], $coupons);
+				
+			}
+			
 			foreach($order_totals as $order_total){
-				if( $order_total['code'] == 'shipping'   ||  $order_total['code'] == 'voucher'){
+				if( $order_total['code'] == 'shipping'    ){
 					$item['name'] = $order_total['title'];
 					$item['price'] = round($order_total['value'],2);
 					$item['quantity'] =(float) 1;
@@ -232,7 +237,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					}else{
 						$item['payment_object']= 'payment';
 					} 
-					if($order_total['code'] == 'coupon' ||  $order_total['code'] == 'voucher'){
+					if($order_total['code'] == 'coupon' ){ //||  $order_total['code'] == 'voucher'
 						$vat = 'none';
 					}else{
 						$vat = $this->config->get('ecomkassa_vat');  
@@ -275,6 +280,167 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				file_put_contents(DIR_LOGS.'ecomkassa.log', 'incorrect json data'.PHP_EOL. $response.PHP_EOL.PHP_EOL, FILE_APPEND);
 			}
 			$this->addOrderReceipt($order_info,$request,$json ,'sell' );
+	}
+	
+	
+	public function calculate_discount($products, $coupons){
+		
+		file_put_contents(DIR_LOGS.'ecomkassa.log', 'calculate_discount ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
+		
+		$discount = 0;
+		$spare = 0;
+		
+		
+		$spare = ($coupons*100) %count($products);
+		$spare = $spare /100;
+		
+		$discount = ($coupons-$spare) /  count($products);
+		
+		
+		//calculate discount per line
+		$discount =  round($discount,2) ;
+		
+		//calculate spare
+		//$spare = $coupons  - ($discount *  count($products));
+		//$spare = round($spare,2) ;
+ 
+		//try to substract discount and add spare 
+		foreach($products as $i => $item){
+			/*
+			if($item['sum']  >= $spare    && $spare  != 0){
+					$item['sum'] = $item['sum']  - $spare ;
+					$item['sum'] =(float) $item['sum'];
+					$spare = 0;
+			}
+			*/
+			
+			if($item['sum'] < $discount ){
+				$item['sum'] = 0.00;
+				$spare += $discount  - $item['sum']  ;
+			}else{
+				$item['sum'] = $item['sum'] - $discount;
+				
+			}
+				
+			//check if item sum cannot divide in quantity	
+			if( ($item['sum']*100) % $item['quantity']){
+				$left = ($item['sum']*100) % $item['quantity'];
+				$left = $left/100;
+				$item['sum'] = $item['sum'] - $left;
+				$spare += $left;
+				echo 'Spare is ' .$spare . ' for item' .  $item['name']  . PHP_EOL;
+			}
+			
+			$products[$i] = $item;
+		}	
+		
+		echo 'Spare is ' . $spare. PHP_EOL;
+		
+		//second calc
+		if($spare > 0){
+			$data = $this->second_calc($products, $spare);
+			$products = $data['products'];
+			$spare = $data['spare'];
+		}
+		
+		//third calc
+		if($spare > 0){
+			$data = $this->third_calc($products, $spare);
+			$products = $data['products'];
+			$spare = $data['spare'];
+		}
+		//fourth calc
+		if($spare > 0){
+			$data = $this->fourth_calc($products, $spare);
+			$products = $data['products'];
+			$spare = $data['spare'];
+		}
+		
+		return $products;
+	}
+	
+	public function second_calc($products, $spare){
+		file_put_contents(DIR_LOGS.'ecomkassa.log', 'second_calc ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
+		foreach($products as $i => $item){
+			if( ($spare*100) % $item['quantity'] && $item['sum'] >= $spare){
+				$products[$i]['sum'] = $item['sum'] - $spare;
+				$spare = 0;
+			}
+		}
+		$data['products'] = $products;
+		$data['spare'] = $spare;
+		
+		return $data;
+	}
+	public function third_calc($products, $spare){
+		file_put_contents(DIR_LOGS.'ecomkassa.log', 'third_calc ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
+		foreach($products as $i => $item){
+		foreach($products as $k => $second_item){
+			if( ($spare*100) % ($item['quantity']+$second_item['quantity']) && $item['sum'] >= $spare){
+				$total_quantity = $item['quantity']+$second_item['quantity'];
+				
+				//i weight
+				$spare1 = round($spare * $item['quantity']/$total_quantity ,2) ;
+				$products[$i]['sum'] = $item['sum'] - $spare1 ;
+				
+				//k weight
+				$spare2 = round($spare * $second_item['quantity']/$total_quantity ,2) ;
+				$products[$k]['sum'] = $item['sum'] - $spare2 ;
+				
+				
+				if($spare  >  $spare1  + $spare2){
+					
+					$spare = $spare - ($spare1  + $spare2);
+				}else{
+					$spare = 0;
+					
+				}
+			}
+		}
+		}
+		$data['products'] = $products;
+		$data['spare'] = $spare;
+		
+		return $data;
+	}
+	public function fourth_calc($products, $spare){  //split position and remove discount
+		file_put_contents(DIR_LOGS.'ecomkassa.log', 'fourth_calc ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
+		foreach($products as $i => $item){
+			if(  $item['sum'] >= $spare){
+				
+				$price = $item['sum'] / $item['quantity'];
+				$count_items = $spare / $price ;
+				if($count_items  < 0){
+					//echo 'take no full ';
+					
+				}else{
+					// echo 'take ' . (int)$delta. '  full ';
+					$count_items = (int)$count_items;
+					$spare = $spare - ($price  * $count_items); 
+					
+					$zero_itm = $item;
+					$zero_itm['quantity'] = $count_items;
+					$zero_itm['sum'] = 0;
+					$item['quantity'] = $item['quantity'] - $count_items;
+					$products[] = $zero_itm;
+				}
+				
+				if($spare > 0 ){
+					$substr_itm = $item;
+					$substr_itm['quantity'] = 1;
+					$substr_itm['sum'] = $substr_itm['sum'] - $spare ;
+					$item['quantity'] = $item['quantity'] - 1;
+					$products[] = $substr_itm;
+					$spare = 0;
+					
+				}
+
+			}
+		}
+		$data['products'] = $products;
+		$data['spare'] = $spare;
+		
+		return $data;
 	}
 	
 	
