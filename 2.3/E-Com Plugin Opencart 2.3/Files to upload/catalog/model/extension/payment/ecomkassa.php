@@ -336,11 +336,13 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		
 		echo 'Spare is ' . $spare. PHP_EOL;
 		
-		//second calc
+		//second calc  //0.01
 		if($spare > 0){
 			$data = $this->second_calc($products, $spare);
 			$products = $data['products'];
 			$spare = $data['spare'];
+			
+			
 		}
 		
 		//third calc
@@ -356,13 +358,14 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			$spare = $data['spare'];
 		}
 		
+		 
 		return $products;
 	}
 	
 	public function second_calc($products, $spare){
 		file_put_contents(DIR_LOGS.'ecomkassa.log', 'second_calc ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
 		foreach($products as $i => $item){
-			if( ($spare*100) % $item['quantity'] && $item['sum'] >= $spare){
+			if( ($spare*100) % $item['quantity'] == 0 && $item['sum'] >= $spare){
 				$products[$i]['sum'] = $item['sum'] - $spare;
 				$spare = 0;
 			}
@@ -376,7 +379,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		file_put_contents(DIR_LOGS.'ecomkassa.log', 'third_calc ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
 		foreach($products as $i => $item){
 		foreach($products as $k => $second_item){
-			if( ($spare*100) % ($item['quantity']+$second_item['quantity']) && $item['sum'] >= $spare){
+			if( ($spare*100) % ($item['quantity']+$second_item['quantity']) == 0 && $item['sum'] >= $spare){
 				$total_quantity = $item['quantity']+$second_item['quantity'];
 				
 				//i weight
