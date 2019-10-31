@@ -344,19 +344,30 @@ class ModelExtensionModuleEcomkassa extends Model {
 	}
 	
 	public function first_calc($products, $coupons){
+			file_put_contents(DIR_LOGS.'ecomkassa.log', 'first_calc ' . $coupons  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
 		$spare = 0;
 		$sum  =0 ;
+		$item_discounts  =0 ;
 		 foreach($products as $i => $item){
 			 $sum += $item['sum'] ;
 		 }
-		 
-		 
+	 
+		$arrayKeys = array_keys($products);
+		// Fetch last array key
+		$lastArrayKey = array_pop($arrayKeys);
 		 
 		 foreach($products as $i => $item){
-			$weight =  $item['sum'] / $sum;
-			$item_discount =  round($weight * $item['sum']);
+			 //if last 
+			 if($i == $lastArrayKey ){
+				 $item_discount = $coupons -  $item_discounts;
+			 }else{
+				$weight =  $item['sum'] / $sum;
+				$item_discount =  round($weight * $item['sum']);
+				$item_discounts += $item_discount;
+			 }
+ 
 			$item['sum'] = $item['sum'] - $item_discount;
-			
+
 			
 			//check if item sum cannot divide in quantity	
 			if( ($item['sum']*100) % $item['quantity']  != 0){
@@ -369,7 +380,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 			
 			$products[$i] = $item;
 		}	
-		 
+		 	file_put_contents(DIR_LOGS.'ecomkassa.log', 'first_calc spare ' . $spare  .PHP_EOL. print_r($products, true) .PHP_EOL.PHP_EOL, FILE_APPEND);
 		 
 			
 		$data['products'] = $products;
