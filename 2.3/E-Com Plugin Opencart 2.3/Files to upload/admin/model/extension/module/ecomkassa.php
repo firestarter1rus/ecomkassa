@@ -359,11 +359,20 @@ class ModelExtensionModuleEcomkassa extends Model {
 		 foreach($products as $i => $item){
 			 //if last 
 			 if($i == $lastArrayKey ){
+			    //  echo 'last  '.  PHP_EOL;
+			    // echo '$coupons  '.  $coupons . ' $item_discounts '. $item_discounts. PHP_EOL;
 				 $item_discount = $coupons -  $item_discounts;
 			 }else{
+			     // echo ' not last  '.  PHP_EOL;
+			      
 				$weight =  $item['sum'] / $sum;
-				$item_discount =  round($weight * $item['sum']);
+				
+				 //echo '$weight  '.  $weight . ' $sum '. $sum. PHP_EOL;
+				
+				$item_discount =  round($weight * $coupons);
+				 //echo '$item_discount  '.  $item_discount .  PHP_EOL;
 				$item_discounts += $item_discount;
+				 //echo '$item_discounts  ' .  $item_discounts . PHP_EOL;
 			 }
  
 			$item['sum'] = $item['sum'] - $item_discount;
@@ -375,7 +384,7 @@ class ModelExtensionModuleEcomkassa extends Model {
 				$left = $left/100;
 				$item['sum'] = $item['sum'] - $left;
 				$spare += $left;
-				echo 'Spare is ' .$spare . ' for item' .  $item['name']  . PHP_EOL;
+				//echo 'Spare is ' .$spare . ' for item' .  $item['price']  . PHP_EOL;
 			}
 			
 			$products[$i] = $item;
