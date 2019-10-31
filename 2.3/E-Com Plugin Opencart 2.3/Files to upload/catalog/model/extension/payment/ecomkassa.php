@@ -291,8 +291,21 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		$spare = 0;
 		
 		
-		$spare = ($coupons*100) %count($products);
+		//first calc if coupons is integer
+		if( $coupons*100 % 100 == 0 ){
+			$data = $this->first_calc($products, $coupons);
+			//$products = $data['products'];
+			$spare = $data['spare'];
+			
+			if($spare == 0){
+				return  $data['products'];
+			}
+		} 
+		
+		
+		$spare = ($coupons*100) % count($products);
 		$spare = $spare /100;
+			
 		
 		$discount = ($coupons-$spare) /  count($products);
 		
@@ -306,13 +319,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
  
 		//try to substract discount and add spare 
 		foreach($products as $i => $item){
-			/*
-			if($item['sum']  >= $spare    && $spare  != 0){
-					$item['sum'] = $item['sum']  - $spare ;
-					$item['sum'] =(float) $item['sum'];
-					$spare = 0;
-			}
-			*/
+			 
 			
 			if($item['sum'] < $discount ){
 				$item['sum'] = 0.00;
@@ -323,7 +330,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			}
 				
 			//check if item sum cannot divide in quantity	
-			if( ($item['sum']*100) % $item['quantity']){
+			if( ($item['sum']*100) % $item['quantity']  != 0){
 				$left = ($item['sum']*100) % $item['quantity'];
 				$left = $left/100;
 				$item['sum'] = $item['sum'] - $left;
@@ -341,8 +348,6 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			$data = $this->second_calc($products, $spare);
 			$products = $data['products'];
 			$spare = $data['spare'];
-			
-			
 		}
 		
 		//third calc
@@ -357,9 +362,43 @@ class ModelExtensionPaymentEcomkassa extends Model {
 			$products = $data['products'];
 			$spare = $data['spare'];
 		}
-		
-		 
+ 
 		return $products;
+	}
+	
+	public function first_calc($products, $coupons){
+		$spare = 0;
+		$sum  =0 ;
+		 foreach($products as $i => $item){
+			 $sum += $item['sum'] ;
+		 }
+		 
+		 
+		 
+		 foreach($products as $i => $item){
+			$weight =  $item['sum'] / $sum;
+			$item_discount =  round($weight * $item['sum']);
+			$item['sum'] = $item['sum'] - $item_discount;
+			
+			
+			//check if item sum cannot divide in quantity	
+			if( ($item['sum']*100) % $item['quantity']  != 0){
+				$left = ($item['sum']*100) % $item['quantity'];
+				$left = $left/100;
+				$item['sum'] = $item['sum'] - $left;
+				$spare += $left;
+				echo 'Spare is ' .$spare . ' for item' .  $item['name']  . PHP_EOL;
+			}
+			
+			$products[$i] = $item;
+		}	
+		 
+		 
+			
+		$data['products'] = $products;
+		$data['spare'] = $spare;
+		
+		return $data;
 	}
 	
 	public function second_calc($products, $spare){
