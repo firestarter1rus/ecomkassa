@@ -26,7 +26,7 @@ class ControllerExtensionModuleEcomkassa extends Controller {
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
 			$this->model_setting_setting->editSetting('module_ecomkassa', $this->request->post);
 			
-			var_dump($this->request->post);
+			//var_dump($this->request->post);
 			$this->session->data['success'] = $this->language->get('text_success');
 			$this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'], 'SSL'));
 		}
