@@ -207,7 +207,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 				
 				$vat = $this->config->get('ecomkassa_vat');  
 				$item['vat']['type'] = $vat ;  				
-				$item['payment_method']= 'full_prepayment';
+				$item['payment_method']= 'full_payment'; //todo
 				$tax = $this->get_vat(round($order_product['price'],2),$this->config->get('ecomkassa_vat') );      
 				if($tax){
 					$item['tax_sum'] = $tax;
@@ -231,7 +231,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 					$item['quantity'] =(float) 1;
 					$item['sum']= round($order_total['value'],2);
 					$item['sum'] =(float) $item['sum'];
-					$item['payment_method']= 'full_prepayment';
+					$item['payment_method']= 'full_payment';  //todo
 					if( $order_total['code'] == 'shipping'){
 						$item['payment_object']= 'service';
 					}else{
