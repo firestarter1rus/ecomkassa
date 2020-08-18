@@ -136,6 +136,7 @@ class ModelExtensionPaymentEcomkassa extends Model {
 		$shop_id = $this->config->get('module_ecomkassa_shopid');
 		 
 		$url =trim(  $this->config->get('module_ecomkassa_url'), '/').'/'.$shop_id. '/sell?tokenid='.$authToken;  
+		file_put_contents(DIR_LOGS.'ecomkassa.log', 'url'.PHP_EOL. print_r($url, true).PHP_EOL.PHP_EOL, FILE_APPEND);
 		$order_products = $this->getOrderProducts($order_info['order_id']);
 		$order_totals = $this->getOrderTotals($order_info['order_id']);
 		 

@@ -1,0 +1,226 @@
+checkTransaction call
+new order_status_id 1
+order_payment_method cod
+ecomkassa method setting 1
+ecomkassa settings Array
+(
+    [cod] => 1
+    [free_checkout] => -1
+)
+
+request
+Array
+(
+    [login] => sales@ecomkassa.ru
+    [pass] => ***
+)
+
+
+response
+{"code":0,"text":"","token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxLXlOQjdndDhHZUh5Y0U0NDZQXC8wMURQUEtKR212RU92UWl0S0FwSktmbFZtYU9tcXZsbElLREdIR1pmSW1Db1k5N09DZVNwRFZsREZCMmk0eEozakJlNEhtQlo4OUN1eTd1MzBrQzVHNzlnPT0iLCJpc3MiOiJhcHAuZWNvbWthc3NhLnJ1IiwiZXhwIjoxNTk3Nzk1MzA4LCJpYXQiOjE1OTc3MDg5MDgsImp0aSI6IjFhYmJiOTI1NjQ5ZWJjMGI4ZWZiZWZiNzI5M2UxZDEwMWNmOWU4MTRiMTI2MWIyYzY0YTY0M2NjYjk3Mjk5NDg0NTNjM2JiNTk2OTAwZjAzZWVmYjRkNDQzMWUwMDkxZjU5MDcyNzNlM2MxYjljZTcxM2RkMTg4MjcwMjk3ZDlhM2E3YmZkMGVmMDQ4YTdhNjA3YTNkMGM3MTQzM2MzNTQxNzRmYTJjMzUwMGU5MGQ0MTIxZGZjNGEzYmNiMGVjN2VhZDlkZGQ2NTgzODMxYzk3MzI0YzEyODU0ODY0NDcxN2ViNmY1MzkxMGJmYmJiMzk3ZDkxNDBhZDk5Y2RhNjAifQ.pKfuYSXu_ZEV7BH_NCid-imzWAVxVMPmvktNhpkfTCw"}
+
+request
+Array
+(
+    [external_id] => 702
+    [receipt] => Array
+        (
+            [client] => Array
+                (
+                    [email] => maxim.dzhamanbaev@gmail.com
+                )
+
+            [company] => Array
+                (
+                    [sno] => usn_income_outcome
+                    [email] => admin@test.ru
+                    [inn] => 7708317992
+                    [payment_address] => http://136.144.31.24/
+                )
+
+            [vats] => Array
+                (
+                    [0] => Array
+                        (
+                            [type] => none
+                            [sum] => 
+                        )
+
+                )
+
+            [items] => Array
+                (
+                    [0] => Array
+                        (
+                            [name] => HTC Touch HD
+                            [price] => 100
+                            [quantity] => 1
+                            [payment_object] => commodity
+                            [sum] => 100
+                            [payment_method] => full_payment
+                            [tax] => none
+                            [vat] => Array
+                                (
+                                    [type] => none
+                                )
+
+                        )
+
+                    [1] => Array
+                        (
+                            [name] => Самовывоз из магазина
+                            [price] => 0
+                            [quantity] => 1
+                            [payment_object] => service
+                            [sum] => 0
+                            [payment_method] => full_payment
+                            [tax] => none
+                            [vat] => Array
+                                (
+                                    [type] => none
+                                )
+
+                        )
+
+                )
+
+            [payments] => Array
+                (
+                    [0] => Array
+                        (
+                            [sum] => 100
+                            [type] => 1
+                        )
+
+                )
+
+            [total] => 100
+        )
+
+    [service] => Array
+        (
+            [callback_url] => http://136.144.31.24/index.php?route=extension/module/ecomkassa/callback
+            [inn] => 7708317992
+            [payment_address] => http://136.144.31.24/
+        )
+
+    [timestamp] => 18.08.2020 20:35:22
+)
+
+
+response
+{"uuid":"","timestamp":"18.08.2020 20:35:22","status":"fail","permalink":"","error":{"code":8,"text":"IncomingValidationException. '/receipt/vats(0)/sum'->[Number value expected]","type":"system"},"kind":"CASH_VOUCHER"}
+
+checkTransaction call
+new order_status_id 1
+order_payment_method cod
+ecomkassa method setting 1
+ecomkassa settings Array
+(
+    [cod] => 1
+    [free_checkout] => -1
+)
+
+request
+Array
+(
+    [login] => sales@ecomkassa.ru
+    [pass] => ***
+)
+
+
+response
+{"code":0,"text":"","token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxLXlOQjdndDhHZUh5Y0U0NDZQXC8wMURQUEtKR212RU92UWl0S0FwSktmbFZtYU9tcXZsbElLREdIR1pmSW1Db1k5N09DZVNwRFZsREZCMmk0eEozakJlNEhtQlo4OUN1eTd1MzBrQzVHNzlnPT0iLCJpc3MiOiJhcHAuZWNvbWthc3NhLnJ1IiwiZXhwIjoxNTk3Nzk1MzA4LCJpYXQiOjE1OTc3MDg5MDgsImp0aSI6IjFhYmJiOTI1NjQ5ZWJjMGI4ZWZiZWZiNzI5M2UxZDEwMWNmOWU4MTRiMTI2MWIyYzY0YTY0M2NjYjk3Mjk5NDg0NTNjM2JiNTk2OTAwZjAzZWVmYjRkNDQzMWUwMDkxZjU5MDcyNzNlM2MxYjljZTcxM2RkMTg4MjcwMjk3ZDlhM2E3YmZkMGVmMDQ4YTdhNjA3YTNkMGM3MTQzM2MzNTQxNzRmYTJjMzUwMGU5MGQ0MTIxZGZjNGEzYmNiMGVjN2VhZDlkZGQ2NTgzODMxYzk3MzI0YzEyODU0ODY0NDcxN2ViNmY1MzkxMGJmYmJiMzk3ZDkxNDBhZDk5Y2RhNjAifQ.pKfuYSXu_ZEV7BH_NCid-imzWAVxVMPmvktNhpkfTCw"}
+
+request
+Array
+(
+    [external_id] => 703
+    [receipt] => Array
+        (
+            [client] => Array
+                (
+                    [email] => maxim.dzhamanbaev@gmail.com
+                )
+
+            [company] => Array
+                (
+                    [sno] => usn_income_outcome
+                    [email] => admin@test.ru
+                    [inn] => 7708317992
+                    [payment_address] => http://136.144.31.24/
+                )
+
+            [vats] => Array
+                (
+                    [0] => Array
+                        (
+                            [type] => none
+                            [sum] => 0
+                        )
+
+                )
+
+            [items] => Array
+                (
+                    [0] => Array
+                        (
+                            [name] => HTC Touch HD
+                            [price] => 100
+                            [quantity] => 1
+                            [payment_object] => commodity
+                            [sum] => 100
+                            [payment_method] => full_payment
+                            [tax] => none
+                            [vat] => Array
+                                (
+                                    [type] => none
+                                )
+
+                        )
+
+                    [1] => Array
+                        (
+                            [name] => Самовывоз из магазина
+                            [price] => 0
+                            [quantity] => 1
+                            [payment_object] => service
+                            [sum] => 0
+                            [payment_method] => full_payment
+                            [tax] => none
+                            [vat] => Array
+                                (
+                                    [type] => none
+                                )
+
+                        )
+
+                )
+
+            [payments] => Array
+                (
+                    [0] => Array
+                        (
+                            [sum] => 100
+                            [type] => 1
+                        )
+
+                )
+
+            [total] => 100
+        )
+
+    [service] => Array
+        (
+            [callback_url] => http://136.144.31.24/index.php?route=extension/module/ecomkassa/callback
+            [inn] => 7708317992
+            [payment_address] => http://136.144.31.24/
+        )
+
+    [timestamp] => 18.08.2020 20:36:34
+)
+
+
+response
+{"uuid":"23311882","timestamp":"18.08.2020 20:36:34","status":"wait","permalink":"https://app.ecomkassa.ru/public/order/23311882/b176e4a6b0972fdfd5831931b9c5bef2","error":null,"kind":"CASH_VOUCHER_V2"}
+

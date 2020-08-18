@@ -1,0 +1,154 @@
+<?php
+
+/**
+* This file is part of the ecom/kassa-sdk library
+*
+* For the full copyright and license information, please view the LICENSE
+* file that was distributed with this source code.
+*/
+
+namespace EcomTest\KassaSdk;
+
+use Ecom\KassaSdk\Check;
+use Ecom\KassaSdk\Payment;
+use Ecom\KassaSdk\Position;
+use Ecom\KassaSdk\QueueManager;
+use Ecom\KassaSdk\Vat;
+
+class QueueManagerTest extends \PHPUnit_Framework_TestCase
+{
+    private $client;
+    private $qm;
+
+    protected function setUp()
+    {
+        $this->client = $this
+            ->getMockBuilder('\Ecom\KassaSdk\Client')
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->qm = new QueueManager($this->client);
+    }
+
+    public function testRegisterQueue()
+    {
+        $this->assertFalse($this->qm->hasQueue('my-queue'));
+        $this->assertTrue($this->qm->registerQueue('my-queue', 'queue-id')->hasQueue('my-queue'));
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testSetDefaultQueueFailedWithUnregisteredQueue()
+    {
+        $this->qm->setDefaultQueue('my-queue');
+    }
+
+    public function testSetDefaultQueueSucceeded()
+    {
+        $qm = $this->qm->registerQueue('my-queue', 'queue-id')->setDefaultQueue('my-queue');
+        $this->assertEquals($qm, $this->qm);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testIsQueueActiveFailedWithUnregisteredQueue()
+    {
+        $this->qm->isQueueActive('my-queue');
+    }
+
+    public function testIsQueueActiveTrue()
+    {
+        $this->qm->registerQueue('my-queue', 'queue-id');
+        $this->client
+            ->expects($this->once())
+            ->method('sendRequest')
+            ->with($this->equalTo('api/shop/v1/queues/queue-id'))
+            ->willReturn(['state' => 'active']);
+        $this->assertTrue($this->qm->isQueueActive('my-queue'));
+    }
+
+    public function testIsQueueActiveFalseWithPassive()
+    {
+        $this->qm->registerQueue('my-queue', 'queue-id');
+        $this->client
+            ->expects($this->once())
+            ->method('sendRequest')
+            ->with($this->equalTo('api/shop/v1/queues/queue-id'))
+            ->willReturn(['state' => 'passive']);
+        $this->assertFalse($this->qm->isQueueActive('my-queue'));
+    }
+
+    public function testIsQueueActiveFalseWithNonArray()
+    {
+        $this->qm->registerQueue('my-queue', 'queue-id');
+        $this->client
+            ->expects($this->once())
+            ->method('sendRequest')
+            ->with($this->equalTo('api/shop/v1/queues/queue-id'))
+            ->willReturn('string');
+        $this->assertFalse($this->qm->isQueueActive('my-queue'));
+    }
+
+    /**
+     * @expectedException \LogicException
+     * @expectedExceptionMessage Default queue is not set
+     */
+    public function testPutCheckFailedWithoutDefaultQueue()
+    {
+        $check = $this->getMockBuilder('\Ecom\KassaSdk\Check')->disableOriginalConstructor()->getMock();
+        $this->qm->putCheck($check);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Unknown queue "my-queue"
+     */
+    public function testPutCheckFailedWithUnregisteredQueue()
+    {
+        $check = $this->getMockBuilder('\Ecom\KassaSdk\Check')->disableOriginalConstructor()->getMock();
+        $this->qm->putCheck($check, 'my-queue');
+    }
+
+    public function testPutCheckToDefaultQueueSucceeded()
+    {
+        $this->qm->registerQueue('my-queue', 'queue-id');
+        $this->qm->setDefaultQueue('my-queue');
+
+        $vat = new Vat('18%');
+        $position = new Position('name', 100, 1, 100, 0, $vat);
+        $payment = Payment::createCard(100);
+
+        $check = Check::createSell('id', 'user@host', Check::TS_COMMON);
+        $check->addPosition($position);
+        $check->addPayment($payment);
+        $data = $check->asArray();
+        $path = 'api/shop/v1/queues/queue-id/task';
+        $rep = ['key' => 'value'];
+        $this->client->expects($this->once())->method('sendRequest')->with($path, $data)->willReturn($rep);
+
+        $this->assertEquals($this->qm->putCheck($check), $rep);
+    }
+
+    public function testPutCheckToCustomQueueSucceeded()
+    {
+        $this->qm->registerQueue('default-queue', 'default-id');
+        $this->qm->setDefaultQueue('default-queue');
+        $this->qm->registerQueue('my-queue', 'queue-id');
+
+        $vat = new Vat('no');
+        $position = new Position('name', 100, 1, 100, 0, $vat);
+        $payment = Payment::createCash(100);
+
+        $check = Check::createSellReturn('id', 'user@host', Check::TS_COMMON)->setShouldPrint(true);
+        $check->addPosition($position);
+        $check->addPayment($payment);
+        $data = $check->asArray();
+        $this->assertTrue($data['print']);
+        $path = 'api/shop/v1/queues/queue-id/task';
+        $rep = ['key' => 'val'];
+        $this->client->expects($this->once())->method('sendRequest')->with($path, $data)->willReturn($rep);
+
+        $this->assertEquals($this->qm->putCheck($check, 'my-queue'), $rep);
+    }
+}
